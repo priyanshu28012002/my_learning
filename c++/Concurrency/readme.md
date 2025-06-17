@@ -1,4 +1,5 @@
-Callable Functions
+use for compile g++ -std=c++20 main.cpp -pthread -o main
+Callable Functions use()
 
 ### Thread Requires a Callable
 

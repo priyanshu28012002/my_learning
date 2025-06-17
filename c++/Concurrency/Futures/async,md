@@ -1,0 +1,117 @@
+# **Complete Guide to `std::async` in C++**
+
+`std::async` is a high-level abstraction for launching asynchronous tasks in C++. It returns a `std::future` that will eventually hold the result of the computation. Let's explore all its variations and nuances.
+
+## **1. Basic Syntax**
+```cpp
+#include <future>
+#include <iostream>
+
+int main() {
+    // Basic async call
+    auto future = std::async([](){ return 42; });
+    std::cout << future.get() << std::endl; // Output: 42
+    return 0;
+}
+```
+
+## **2. Launch Policies**
+`std::async` can be controlled using launch policies from `std::launch`:
+
+### **(A) `std::launch::async`**
+- **Guarantees** the task will run in a new thread.
+- **Throws** `std::system_error` if thread creation fails.
+```cpp
+auto fut = std::async(std::launch::async, [](){
+    std::this_thread::sleep_for(1s);
+    return 100;
+});
+```
+
+### **(B) `std::launch::deferred`**
+- **Runs lazily** (only when `get()` or `wait()` is called).
+- **Executes in the calling thread** (no new thread is created).
+```cpp
+auto fut = std::async(std::launch::deferred, [](){
+    return "Lazy evaluation";
+});
+// Task hasn't started yet!
+std::cout << fut.get(); // Runs now in current thread
+```
+
+### **(C) Default Policy (Async or Deferred)**
+- **Implementation-defined** (usually `async`).
+- **Not guaranteed** to run in a new thread.
+```cpp
+auto fut = std::async([](){ return 3.14; }); // Default policy
+```
+
+### **(D) Combined Policy (Async | Deferred)**
+- **Lets the implementation decide**.
+- **Useful for flexibility**.
+```cpp
+auto fut = std::async(
+    std::launch::async | std::launch::deferred,
+    [](){ return "Flexible execution"; }
+);
+```
+
+## **3. Passing Arguments**
+You can pass arguments to the async function:
+```cpp
+auto fut = std::async([](int a, int b){ return a + b; }, 10, 20);
+std::cout << fut.get(); // 30
+```
+
+## **4. Exception Handling**
+Exceptions thrown in async tasks are propagated to the `future`:
+```cpp
+auto fut = std::async([](){
+    throw std::runtime_error("Oops!");
+    return 1;
+});
+
+try {
+    fut.get();
+} catch (const std::exception& e) {
+    std::cerr << "Caught: " << e.what() << std::endl;
+}
+```
+
+## **5. Returning References**
+To return references, use `std::ref`:
+```cpp
+int x = 100;
+auto fut = std::async([](int& val){ return ++val; }, std::ref(x));
+fut.wait();
+std::cout << x; // 101
+```
+
+## **6. Performance Considerations**
+| Policy | Thread Usage | Best For |
+|--------|-------------|----------|
+| `async` | New thread | CPU-bound tasks |
+| `deferred` | Same thread | Lazy evaluation |
+| Default | Implementation choice | General use |
+
+## **7. Key Takeaways**
+1. **`std::async` simplifies threading** compared to manual `std::thread` management.
+2. **Use `std::launch::async`** when you need guaranteed parallelism.
+3. **Use `std::launch::deferred`** for lazy evaluation.
+4. **Exceptions propagate** safely to the calling thread.
+5. **Default policy is implementation-dependent** (usually `async`).
+
+## Policy selection
+If more than one flag is set, it is implementation-defined which policy is selected. For the default (both the std::launch::async and std::launch::deferred flags are set in policy), standard recommends (but does not require) utilizing available concurrency, and deferring any additional tasks.
+
+If the std::launch::async policy is chosen,
+
+a call to a waiting function on an asynchronous return object that shares the shared state created by this std::async call blocks until the associated thread has completed, as if joined, or else time out; and
+the associated thread completion synchronizes-with the successful return from the first function that is waiting on the shared state, or with the return of the last function that releases the shared state, whichever comes first.
+
+## Exceptions
+Throws
+
+std::bad_alloc, if the memory for the internal data structures cannot be allocated, or
+std::system_error with error condition std::errc::resource_unavailable_try_again, if policy == std::launch::async and the implementation is unable to start a new thread.
+If policy is std::launch::async | std::launch::deferred or has additional bits set, it will fall back to deferred invocation or the implementation-defined policies in this case.

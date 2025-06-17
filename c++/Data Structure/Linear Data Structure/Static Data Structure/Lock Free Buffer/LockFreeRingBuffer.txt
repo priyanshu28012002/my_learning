@@ -1,0 +1,11 @@
+Project discription 
+
+make 2 pool thread 
+one for the producer 4
+one for the Consumer 4
+
+objective is to read the text form one file and change the small case to capital case(Bussniss  logic)
+
+one by one the producer thread will cone parce the small portion of the file and apply the Bussniss logic
+and writeit in the buffer and now Consumer thread will copy the came data in the buffer to the new file 
+ 

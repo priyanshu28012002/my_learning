@@ -1,0 +1,1 @@
+Cost function  are Mean Squared Error

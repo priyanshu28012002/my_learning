@@ -1,0 +1,52 @@
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+
+std::mutex mtx;
+std::condition_variable cv;
+std::queue<int> data_queue;
+bool finished = false;
+
+void producer() {
+    for(int i = 0; i < 10; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::lock_guard<std::mutex> lock(mtx);
+        data_queue.push(i);
+        cv.notify_one();
+    }
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        finished = true;
+    }
+    cv.notify_all();
+}
+
+void consumer(int id) {
+    while(true) {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, []{ return !data_queue.empty() || finished; });
+        
+        if(finished && data_queue.empty()) break;
+        
+        if(!data_queue.empty()) {
+            int val = data_queue.front();
+            data_queue.pop();
+            lock.unlock();
+            std::cout << "Consumer " << id << " got " << val << std::endl;
+        }
+    }
+}
+
+int main() {
+    std::thread prod(producer);
+    std::thread cons1(consumer, 1);
+    std::thread cons2(consumer, 2);
+    
+    prod.join();
+    cons1.join();
+    cons2.join();
+    
+    return 0;
+}

@@ -1,0 +1,3 @@
+/home/octobot/p/Pendrive/my_learning/c++/Data Structure/Linear Data Structure/Static Data Structure/Lock Free Buffer/Basic Variants/build/CMakeFiles/LockFreeBuffer.dir
+/home/octobot/p/Pendrive/my_learning/c++/Data Structure/Linear Data Structure/Static Data Structure/Lock Free Buffer/Basic Variants/build/CMakeFiles/edit_cache.dir
+/home/octobot/p/Pendrive/my_learning/c++/Data Structure/Linear Data Structure/Static Data Structure/Lock Free Buffer/Basic Variants/build/CMakeFiles/rebuild_cache.dir
